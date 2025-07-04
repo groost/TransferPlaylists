@@ -1,4 +1,5 @@
 from ytmusicapi import YTMusic
+import time
 
 class Youtube:
     def __init__(self):
@@ -28,7 +29,7 @@ class Youtube:
             song = song.toString()
             print(song)
             ids.append(self.ytmusic.search(song, filter)[0]['videoId'])
-            
+            time.sleep(0.1)
         return ids
 
     def create_playlist(self, name, description, ids):

@@ -1,3 +1,4 @@
+from urllib.parse import urlparse, parse_qs
 from flask import Flask, render_template, request, redirect, url_for
 from BetterSpotifyTest import Spotify
 from ytMusicTest import Youtube, Track
@@ -5,6 +6,7 @@ import time
 
 app = Flask(__name__)
 youtube = Youtube()
+spotify = Spotify()
 
 @app.route("/", methods=["GET"])
 def index():
@@ -22,26 +24,36 @@ def transfer():
 
 @app.route("/liked", methods=["POST"])
 def get_liked_songs():
-    spotify = Spotify()
     liked_songs = spotify.get_liked_songs()
     name, desc, youtube_tracks = youtube.search(liked_songs)
     print(youtube.create_playlist(name, desc, youtube_tracks))
 
 @app.route("/spotify-login")
 def spotify_login():
-    spotify = Spotify()
     return redirect(spotify.get_auth_url())
+
+@app.route("/submit_redirect_url", methods=["POST"])
+def submit_redirect_url():
+    redirect_url = request.form.get("redirect_url")
+
+    parsed_url = urlparse(redirect_url)
+    code = parse_qs(parsed_url.query).get("code", [None])[0]
+
+    if not code:
+        return "Invalid URL. Could not find authorization code.", 400
+
+    spotify.exchange_code_for_token(code)
+
+    return render_template("index.html")
 
 @app.route("/callback")
 def spotify_callback():
     code = request.args.get("code")
-    spotify = Spotify()
     token = spotify.exchange_code_for_token(code)
     return "Authorization successful! Token obtained."
 
 
 def transfer_playlists(from_platform, playlist_id, to_platform):
-    spotify = Spotify()
     tracks = []
     name = ""
     desc = ""

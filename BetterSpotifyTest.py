@@ -62,7 +62,7 @@ class Spotify:
         headers = {"Authorization": f"Bearer {self.token}"}
         user_profile = requests.get("https://api.spotify.com/v1/me", headers=headers).json()
         self.user_id = user_profile["id"]
-
+        print("DONE")
         return self.token
 
     def authorize(self):

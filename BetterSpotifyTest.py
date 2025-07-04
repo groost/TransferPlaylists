@@ -11,8 +11,7 @@ class Spotify:
         self.redirect_uri = "http://localhost:8888/callback"
         self.user_id = ""
 
-        self.authorize()
-
+        # self.authorize()
         # auth_str = f"{self.client_id}:{self.client_secret}"
         # b64_auth_str = base64.b64encode(auth_str.encode()).decode()
 

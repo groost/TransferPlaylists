@@ -27,6 +27,19 @@ def get_liked_songs():
     name, desc, youtube_tracks = youtube.search(liked_songs)
     print(youtube.create_playlist(name, desc, youtube_tracks))
 
+@app.route("/spotify-login")
+def spotify_login():
+    spotify = Spotify()
+    return redirect(spotify.get_auth_url())
+
+@app.route("/callback")
+def spotify_callback():
+    code = request.args.get("code")
+    spotify = Spotify()
+    token = spotify.exchange_code_for_token(code)
+    return "Authorization successful! Token obtained."
+
+
 def transfer_playlists(from_platform, playlist_id, to_platform):
     spotify = Spotify()
     tracks = []

@@ -28,6 +28,44 @@ class Spotify:
 
         # self.token = response.json()["access_token"]
 
+    def get_auth_url(self):
+        scopes = "playlist-modify-private playlist-modify-public user-library-read"
+        params = urlencode({
+            "client_id": self.client_id,
+            "response_type": "code",
+            "redirect_uri": self.redirect_uri,
+            "scope": scopes,
+        })
+
+        return f"https://accounts.spotify.com/authorize?{params}"
+
+
+    def exchange_code_for_token(self, code):
+        token_url = "https://accounts.spotify.com/api/token"
+        auth_str = f"{self.client_id}:{self.client_secret}"
+        b64_auth_str = base64.b64encode(auth_str.encode()).decode()
+
+        headers = {
+            "Authorization": f"Basic {b64_auth_str}",
+            "Content-Type": "application/x-www-form-urlencoded"
+        }
+
+        data = {
+            "grant_type": "authorization_code",
+            "code": code,
+            "redirect_uri": self.redirect_uri
+        }
+
+        response = requests.post(token_url, headers=headers, data=data)
+        response_data = response.json()
+        self.token = response_data["access_token"]
+
+        headers = {"Authorization": f"Bearer {self.token}"}
+        user_profile = requests.get("https://api.spotify.com/v1/me", headers=headers).json()
+        self.user_id = user_profile["id"]
+
+        return self.token
+
     def authorize(self):
         scopes = "playlist-modify-private playlist-modify-public user-library-read"
         params = urlencode({

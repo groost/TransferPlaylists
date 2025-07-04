@@ -58,9 +58,16 @@
         <button type="submit">Get Liked Songs</button>
     </form>
 
-    <form action="{{ url_for('spotify_login') }}" method="get">
+    <!-- <form action="{{ url_for('spotify_login') }}" method="get">
         <button type="submit">Connect to Spotify</button>
-    </form>
+    </form> -->
 
+    <a href="{{ url_for('spotify_login') }}" target="_blank">Log in with Spotify (new tab)</a>
+    
+    <form action="{{ url_for('submit_redirect_url') }}" method="POST">
+        <label for="redirect_url">Paste the redirect URL here:</label><br>
+        <input type="text" id="redirect_url" name="redirect_url" style="width: 500px;" required><br><br>
+        <button type="submit">Submit</button>
+    </form>
 </body>
 </html>

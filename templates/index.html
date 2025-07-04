@@ -57,5 +57,10 @@
     <form method="POST" action="/liked">
         <button type="submit">Get Liked Songs</button>
     </form>
+
+    <form action="{{ url_for('spotify_login') }}" method="get">
+        <button type="submit">Connect to Spotify</button>
+    </form>
+
 </body>
 </html>

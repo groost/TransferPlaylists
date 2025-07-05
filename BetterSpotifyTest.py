@@ -197,7 +197,11 @@ class Spotify:
             "limit": 1
         }
 
-        response = requests.get(url, headers=headers, params=params)
+        try:
+            response = requests.get(url, headers=headers, params=params, timeout=10)
+        except requests.exceptions.Timeout:
+            return []
+        
         data = response.json()
 
         tracks = data.get("tracks", {}).get("items", [])

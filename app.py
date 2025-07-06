@@ -25,8 +25,12 @@ def transfer():
 @app.route("/liked", methods=["POST"])
 def get_liked_songs():
     liked_songs = spotify.get_liked_songs()
+    # print(liked_songs)
     youtube_tracks = youtube.search(liked_songs)
+    # print(youtube_tracks)
     print(youtube.create_playlist("liked songs1", "", youtube_tracks))
+    return render_template("index.html")
+
 
 @app.route("/spotify-login")
 def spotify_login():

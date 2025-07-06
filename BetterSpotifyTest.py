@@ -152,18 +152,19 @@ class Spotify:
         return response.json()['id']
     
     def get_liked_songs(self):
-        url = "https://api.spotify.com/v1/me/tracks?limit=50"
+        url = "https://api.spotify.com/v1/me/tracks"
         headers = {"Authorization": f"Bearer {self.token}"}
         liked = []
 
-        while url:
+        for i in range(100):
             res = requests.get(url, headers=headers)
             data = res.json()
             for item in data.get("items", []):
                 track = item["track"]
                 liked.append(Track(track['name'], track['artists'][0]['name'], track['album']['name']))
                 # print(liked[-1])
-            url = data.get("next")  # next page
+            url = data.get("next")
+            # break  # next page
 
         return liked
 

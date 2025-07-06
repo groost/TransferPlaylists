@@ -11,8 +11,7 @@ class Spotify:
         self.redirect_uri = "http://localhost:8888/callback"
         self.user_id = ""
 
-        self.authorize()
-
+        # self.authorize()
         # auth_str = f"{self.client_id}:{self.client_secret}"
         # b64_auth_str = base64.b64encode(auth_str.encode()).decode()
 
@@ -63,7 +62,7 @@ class Spotify:
         headers = {"Authorization": f"Bearer {self.token}"}
         user_profile = requests.get("https://api.spotify.com/v1/me", headers=headers).json()
         self.user_id = user_profile["id"]
-
+        print("DONE")
         return self.token
 
     def authorize(self):
@@ -153,7 +152,7 @@ class Spotify:
         return response.json()['id']
     
     def get_liked_songs(self):
-        url = "https://api.spotify.com/v1/me/tracks?limit=50"
+        url = "https://api.spotify.com/v1/me/tracks"
         headers = {"Authorization": f"Bearer {self.token}"}
         liked = []
 
@@ -164,7 +163,8 @@ class Spotify:
                 track = item["track"]
                 liked.append(Track(track['name'], track['artists'][0]['name'], track['album']['name']))
                 # print(liked[-1])
-            url = data.get("next")  # next page
+            url = data.get("next")
+            # break  # next page
 
         return liked
 
@@ -198,7 +198,11 @@ class Spotify:
             "limit": 1
         }
 
-        response = requests.get(url, headers=headers, params=params)
+        try:
+            response = requests.get(url, headers=headers, params=params, timeout=10)
+        except:
+            return []
+        
         data = response.json()
 
         tracks = data.get("tracks", {}).get("items", [])

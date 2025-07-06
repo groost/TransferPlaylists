@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 <!DOCTYPE html>
 <html>
 <head>
@@ -68,7 +67,14 @@
         </div>
     </form>
 
+    <br>
+    
     <form method="POST" action="/liked">
+        <select id="liked_select" name="liked_select">
+            <option value="Spotify">Spotify Songs</option>
+            <option value="Youtube">Youtube Songs</option>
+        </select>
+        
         <button type="submit">Get Liked Songs</button>
     </form>
 
@@ -79,85 +85,3 @@
     
 </body>
 </html>
-=======
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Platform Selector</title>
-    <style>
-        .hidden { display: none; }
-        .section { margin-top: 20px; }
-    </style>
-    <script>
-        function showInputSection() {
-            const selected = document.getElementById("platform").value;
-            document.getElementById("input-section").classList.remove("hidden");
-            document.getElementById("platform-name").textContent = selected;
-        }
-
-        function showNextSection() {
-            document.getElementById("next-section").classList.remove("hidden");
-        }
-    </script>
-</head>
-<body>
-    <a href="{{ url_for('spotify_login') }}" target="_blank">Log in with Spotify (new tab)</a>
-    
-    <form action="{{ url_for('submit_redirect_url') }}" method="POST">
-        <label for="redirect_url">Paste the redirect URL here:</label><br>
-        <input type="text" id="redirect_url" name="redirect_url" style="width: 500px;" required><br><br>
-        <button type="submit">Submit</button>
-    </form>
-
-    <br>
-    <br>
-    
-
-
-    <h1>Select Platforms</h1>
-
-    <form method="POST" action="/transfer">
-        <!-- First dropdown: source platform -->
-        <div class="section">
-            <label for="platform">From Platform:</label>
-            <select id="platform" name="platform" required>
-                <option value="">-- Select --</option>
-                <option value="Spotify">Spotify</option>
-                <option value="YouTube">YouTube</option>
-            </select>
-            <button type="button" onclick="showInputSection()">Next</button>
-        </div>
-
-        <!-- Playlist ID input -->
-        <div id="input-section" class="hidden section">
-            <h3>Enter <span id="platform-name"></span> Playlist ID</h3>
-            <input type="text" name="playlist_id" placeholder="Playlist ID" required>
-            <br><br>
-            <button type="button" onclick="showNextSection()">Next</button>
-        </div>
-
-        <!-- Second dropdown: destination platform -->
-        <div id="next-section" class="hidden section">
-            <label for="platform1">To Platform:</label>
-            <select id="platform1" name="platform1" required>
-                <option value="">-- Select --</option>
-                <option value="Spotify">Spotify</option>
-                <option value="YouTube">YouTube</option>
-            </select>
-            <br><br>
-            <input type="submit" value="Submit">
-        </div>
-    </form>
-
-    <form method="POST" action="/liked">
-        <button type="submit">Get Liked Songs</button>
-    </form>
-
-    <!-- <form action="{{ url_for('spotify_login') }}" method="get">
-        <button type="submit">Connect to Spotify</button>
-    </form> -->
-
-    
-</body>
-</html>
->>>>>>> ea7ee7b8db46ac212f4ebf0bbb01db80dc803f85

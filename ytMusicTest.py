@@ -3,7 +3,7 @@ import time
 
 class Youtube:
     def __init__(self):
-        self.ytmusic = YTMusic("headers_auth.json")
+        self.ytmusic = YTMusic("browser.json")
         # print(self.ytmusic.get_playlist("PL9bUIJbr567sPBgw7uflPlObHx4tuuERU"))    
 
     def get_playlists(self, id):
@@ -42,7 +42,12 @@ class Youtube:
         return self.ytmusic.create_playlist(name, description, "PUBLIC", video_ids=ids)
 
     def get_liked_songs(self):
-        print(self.ytmusic.get_liked_songs(1000))
+        tracks = self.ytmusic.get_liked_songs(1000)
+        result_tracks = []
+        for i in tracks['tracks']:
+            result_tracks.append(Track(i['title'], i['artists'][0]['name'], ""))
+
+        return result_tracks
 
 class Track:
     def __init__(self, title, artist, album):

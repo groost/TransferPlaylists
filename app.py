@@ -24,11 +24,19 @@ def transfer():
 
 @app.route("/liked", methods=["POST"])
 def get_liked_songs():
-    liked_songs = spotify.get_liked_songs()
-    # print(liked_songs)
-    youtube_tracks = youtube.search(liked_songs)
-    # print(youtube_tracks)
-    print(youtube.create_playlist("liked songs1", "", youtube_tracks))
+    platform = request.form.get("liked_select")
+    if platform == "Youtube":
+        liked_songs = youtube.get_liked_songs()
+        uris = spotify.search_songs(liked_songs)
+        new_playlist_id = spotify.create_playlist("liked songs", "", True)
+        spotify.add_songs_to_playlist(uris, new_playlist_id)
+    else:
+        liked_songs = spotify.get_liked_songs()
+        # print(liked_songs)
+        youtube_tracks = youtube.search(liked_songs)
+        # print(youtube_tracks)
+        print(youtube.create_playlist("liked songs1", "", youtube_tracks))
+        
     return render_template("index.html")
 
 

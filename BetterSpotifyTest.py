@@ -169,22 +169,25 @@ class Spotify:
         return liked
 
     def add_songs_to_playlist(self, song_ids, playlist_id):
-        url = f"https://api.spotify.com/v1/playlists/{playlist_id}/tracks"
-        headers = {
-            "Authorization": f"Bearer {self.token}",
-            "Content-Type": "application/json"
-        }
+        if len(song_ids) > 100:
+            for i in range(0, len(song_ids), 100):
+                new_song_ids = song_ids[i:i+100]
+                url = f"https://api.spotify.com/v1/playlists/{playlist_id}/tracks"
+                headers = {
+                    "Authorization": f"Bearer {self.token}",
+                    "Content-Type": "application/json"
+                }
 
-        data = {
-            "uris": song_ids
-        }
+                data = {
+                    "uris": new_song_ids
+                }
 
-        response = requests.post(url, headers=headers, json=data)
-        
-        if response.status_code == 201:
-            print("Tracks added successfully.")
-        else:
-            print("Failed to add tracks:", response.status_code, response.text)
+                response = requests.post(url, headers=headers, json=data)
+                
+                if response.status_code == 201:
+                    print("Tracks added successfully.")
+                else:
+                    print("Failed to add tracks:", response.status_code, response.text)
 
     def search(self, track):
         url = "https://api.spotify.com/v1/search"
@@ -207,3 +210,13 @@ class Spotify:
 
         tracks = data.get("tracks", {}).get("items", [])
         uris = [track["uri"] for track in tracks]
+
+        return uris
+        
+    def search_songs(self, tracks):
+        uris = []
+        for track in tracks:
+            uris.extend(self.search(track))
+            print(track)
+        
+        return uris

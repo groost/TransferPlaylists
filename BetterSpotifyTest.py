@@ -200,7 +200,7 @@ class Spotify:
 
         try:
             response = requests.get(url, headers=headers, params=params, timeout=10)
-        except requests.exceptions.Timeout:
+        except:
             return []
         
         data = response.json()

@@ -28,7 +28,11 @@ class Youtube:
         for i, song in enumerate(search_songs):
             song = song.toString()
             print(song)
-            search_results = self.ytmusic.search(song, filter)
+            try:
+                search_results = self.ytmusic.search(song, filter)
+            except:
+                return []
+            
             if len(search_results) > 0:  
                 ids.append(search_results[0]['videoId'])
             time.sleep(0.1)

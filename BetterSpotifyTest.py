@@ -156,7 +156,7 @@ class Spotify:
         headers = {"Authorization": f"Bearer {self.token}"}
         liked = []
 
-        for i in range(100):
+        while url:
             res = requests.get(url, headers=headers)
             data = res.json()
             for item in data.get("items", []):

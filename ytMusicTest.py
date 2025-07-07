@@ -35,6 +35,7 @@ class Youtube:
             
             if len(search_results) > 0:  
                 ids.append(search_results[0]['videoId'])
+                
             time.sleep(0.1)
         return ids
 

@@ -1,87 +1,575 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Platform Selector</title>
     <style>
-        .hidden { display: none; }
-        .section { margin-top: 20px; }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 3rem;
+            animation: fadeInUp 0.8s ease-out;
+        }
+
+        .header h1 {
+            font-size: 3rem;
+            font-weight: 700;
+            color: white;
+            text-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+            margin-bottom: 0.5rem;
+        }
+
+        .header p {
+            font-size: 1.2rem;
+            color: rgba(255, 255, 255, 0.9);
+            font-weight: 300;
+        }
+
+        .card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            transition: all 0.3s ease;
+            animation: slideInUp 0.6s ease-out;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 30px 60px rgba(0, 0, 0, 0.15);
+        }
+
+        .card h2 {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: #2d3748;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .icon {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 14px;
+            font-weight: bold;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+            color: #4a5568;
+        }
+
+        input[type="text"], select {
+            width: 100%;
+            padding: 0.875rem 1rem;
+            border: 2px solid #e2e8f0;
+            border-radius: 12px;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            background: white;
+            outline: none;
+        }
+
+        input[type="text"]:focus, select:focus {
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+            transform: translateY(-2px);
+        }
+
+        .btn {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            padding: 0.875rem 2rem;
+            border-radius: 12px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn:active {
+            transform: translateY(0);
+        }
+
+        .btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            transition: left 0.5s;
+        }
+
+        .btn:hover::before {
+            left: 100%;
+        }
+
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.9);
+            color: #667eea;
+            border: 2px solid #667eea;
+        }
+
+        .btn-secondary:hover {
+            background: #667eea;
+            color: white;
+        }
+
+        .platform-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+
+        .platform-option {
+            padding: 1rem;
+            border: 2px solid #e2e8f0;
+            border-radius: 12px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: white;
+        }
+
+        .platform-option:hover {
+            border-color: #667eea;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.2);
+        }
+
+        .platform-option.selected {
+            border-color: #667eea;
+            background: rgba(102, 126, 234, 0.1);
+        }
+
+        .platform-logo {
+            width: 48px;
+            height: 48px;
+            margin: 0 auto 0.5rem;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: white;
+        }
+
+        .spotify-logo {
+            background: #1DB954;
+        }
+
+        .youtube-logo {
+            background: #FF0000;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .section {
+            margin-top: 1.5rem;
+            opacity: 0;
+            animation: fadeIn 0.6s ease-out forwards;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 4px;
+            background: #e2e8f0;
+            border-radius: 2px;
+            margin-bottom: 2rem;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            border-radius: 2px;
+            transition: width 0.5s ease;
+            width: 0%;
+        }
+
+        .step-indicator {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 2rem;
+        }
+
+        .step {
+            flex: 1;
+            text-align: center;
+            padding: 0.5rem;
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.1);
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 0.9rem;
+            margin: 0 0.25rem;
+            transition: all 0.3s ease;
+        }
+
+        .step.active {
+            background: white;
+            color: #667eea;
+            font-weight: 600;
+        }
+
+        .step.completed {
+            background: #667eea;
+            color: white;
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes slideInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+            to {
+                opacity: 1;
+            }
+        }
+
+        .floating-shapes {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            pointer-events: none;
+            z-index: -1;
+        }
+
+        .shape {
+            position: absolute;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 50%;
+            animation: float 20s infinite linear;
+        }
+
+        .shape:nth-child(1) {
+            width: 80px;
+            height: 80px;
+            top: 10%;
+            left: 10%;
+            animation-delay: 0s;
+        }
+
+        .shape:nth-child(2) {
+            width: 60px;
+            height: 60px;
+            top: 20%;
+            right: 20%;
+            animation-delay: 5s;
+        }
+
+        .shape:nth-child(3) {
+            width: 100px;
+            height: 100px;
+            bottom: 20%;
+            left: 20%;
+            animation-delay: 10s;
+        }
+
+        @keyframes float {
+            0%, 100% {
+                transform: translateY(0) rotate(0deg);
+            }
+            50% {
+                transform: translateY(-20px) rotate(180deg);
+            }
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 1rem;
+            }
+
+            .header h1 {
+                font-size: 2rem;
+            }
+
+            .card {
+                padding: 1.5rem;
+            }
+
+            .platform-grid {
+                grid-template-columns: 1fr;
+            }
+        }
     </style>
+</head>
+<body>
+    <div class="floating-shapes">
+        <div class="shape"></div>
+        <div class="shape"></div>
+        <div class="shape"></div>
+    </div>
+
+    <div class="container">
+        <div class="header">
+            <h1>🎵 Platform Selector</h1>
+            <p>Transfer your music seamlessly between platforms</p>
+        </div>
+
+        <div class="step-indicator">
+            <div class="step active" id="step1">Connect</div>
+            <div class="step" id="step2">Select Source</div>
+            <div class="step" id="step3">Enter Playlist</div>
+            <div class="step" id="step4">Choose Destination</div>
+        </div>
+
+        <div class="progress-bar">
+            <div class="progress-fill" id="progressFill"></div>
+        </div>
+
+        <!-- Spotify Connection Card -->
+        <div class="card">
+            <h2><span class="icon">🎵</span> Connect to Spotify</h2>
+            <p style="margin-bottom: 1.5rem; color: #718096;">First, connect your Spotify account to enable playlist transfers.</p>
+            
+            <a href="{{ url_for('spotify_login') }}" target="_blank" class="btn" style="margin-right: 1rem;">
+                <span class="spotify-logo platform-logo" style="width: 20px; height: 20px; display: inline-block; margin-right: 0.5rem;">♪</span>
+                Log in with Spotify
+            </a>
+            
+            <form action="{{ url_for('submit_redirect_url') }}" method="POST" style="margin-top: 1.5rem;">
+                <div class="form-group">
+                    <label for="redirect_url">Paste the redirect URL here:</label>
+                    <input type="text" id="redirect_url" name="redirect_url" placeholder="https://your-redirect-url.com" required>
+                </div>
+                <button type="submit" class="btn btn-secondary">Submit URL</button>
+            </form>
+        </div>
+
+        <!-- Platform Transfer Card -->
+        <div class="card">
+            <h2><span class="icon">↔</span> Transfer Playlists</h2>
+            
+            <form method="POST" action="/transfer">
+                <!-- Source Platform Selection -->
+                <div class="section">
+                    <label>From Platform:</label>
+                    <div class="platform-grid">
+                        <div class="platform-option" onclick="selectPlatform('Spotify', 'source')">
+                            <div class="platform-logo spotify-logo">♪</div>
+                            <div>Spotify</div>
+                        </div>
+                        <div class="platform-option" onclick="selectPlatform('YouTube', 'source')">
+                            <div class="platform-logo youtube-logo">▶</div>
+                            <div>YouTube</div>
+                        </div>
+                    </div>
+                    <input type="hidden" id="platform" name="platform" required>
+                    <button type="button" class="btn" onclick="showInputSection()" style="margin-top: 1rem;" disabled id="nextBtn1">Next</button>
+                </div>
+
+                <!-- Playlist ID Input -->
+                <div id="input-section" class="hidden section">
+                    <div class="form-group">
+                        <label for="playlist_id">Enter <span id="platform-name"></span> Playlist ID:</label>
+                        <input type="text" name="playlist_id" id="playlist_id" placeholder="e.g., 37i9dQZF1DXcBWIGoYBM5M" required>
+                    </div>
+                    <button type="button" class="btn" onclick="showNextSection()">Next</button>
+                </div>
+
+                <!-- Destination Platform Selection -->
+                <div id="next-section" class="hidden section">
+                    <label>To Platform:</label>
+                    <div class="platform-grid">
+                        <div class="platform-option" onclick="selectPlatform('Spotify', 'destination')">
+                            <div class="platform-logo spotify-logo">♪</div>
+                            <div>Spotify</div>
+                        </div>
+                        <div class="platform-option" onclick="selectPlatform('YouTube', 'destination')">
+                            <div class="platform-logo youtube-logo">▶</div>
+                            <div>YouTube</div>
+                        </div>
+                    </div>
+                    <input type="hidden" id="platform1" name="platform1" required>
+                    <button type="submit" class="btn" style="margin-top: 1rem;" disabled id="submitBtn">🚀 Transfer Playlist</button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Liked Songs Card -->
+        <div class="card">
+            <h2><span class="icon">❤</span> Get Liked Songs</h2>
+            <p style="margin-bottom: 1.5rem; color: #718096;">Retrieve your liked songs from your preferred platform.</p>
+            
+            <form method="POST" action="/liked">
+                <div class="form-group">
+                    <label for="liked_select">Choose Platform:</label>
+                    <select id="liked_select" name="liked_select">
+                        <option value="Spotify">Spotify Liked Songs</option>
+                        <option value="Youtube">YouTube Liked Songs</option>
+                    </select>
+                </div>
+                <button type="submit" class="btn">❤ Get Liked Songs</button>
+            </form>
+        </div>
+    </div>
+
     <script>
+        let currentStep = 1;
+        let selectedSource = null;
+        let selectedDestination = null;
+
+        function updateProgress() {
+            const progressFill = document.getElementById('progressFill');
+            const steps = document.querySelectorAll('.step');
+            
+            progressFill.style.width = (currentStep / 4) * 100 + '%';
+            
+            steps.forEach((step, index) => {
+                step.classList.remove('active', 'completed');
+                if (index + 1 < currentStep) {
+                    step.classList.add('completed');
+                } else if (index + 1 === currentStep) {
+                    step.classList.add('active');
+                }
+            });
+        }
+
+        function selectPlatform(platform, type) {
+            const options = document.querySelectorAll('.platform-option');
+            
+            if (type === 'source') {
+                selectedSource = platform;
+                document.getElementById('platform').value = platform;
+                document.getElementById('nextBtn1').disabled = false;
+                document.getElementById('nextBtn1').style.opacity = '1';
+                
+                // Remove previous selections for source
+                options.forEach(opt => {
+                    if (opt.textContent.trim() === platform && opt.closest('.section').querySelector('label').textContent.includes('From')) {
+                        opt.classList.add('selected');
+                    }
+                });
+            } else if (type === 'destination') {
+                selectedDestination = platform;
+                document.getElementById('platform1').value = platform;
+                document.getElementById('submitBtn').disabled = false;
+                document.getElementById('submitBtn').style.opacity = '1';
+                
+                // Remove previous selections for destination
+                options.forEach(opt => {
+                    if (opt.textContent.trim() === platform && opt.closest('.section').querySelector('label').textContent.includes('To')) {
+                        opt.classList.add('selected');
+                    }
+                });
+            }
+        }
+
         function showInputSection() {
             const selected = document.getElementById("platform").value;
             document.getElementById("input-section").classList.remove("hidden");
             document.getElementById("platform-name").textContent = selected;
+            currentStep = 3;
+            updateProgress();
+            
+            // Scroll to the new section
+            document.getElementById("input-section").scrollIntoView({ behavior: 'smooth' });
         }
 
         function showNextSection() {
             document.getElementById("next-section").classList.remove("hidden");
+            currentStep = 4;
+            updateProgress();
+            
+            // Scroll to the new section
+            document.getElementById("next-section").scrollIntoView({ behavior: 'smooth' });
         }
+
+        // Initialize progress
+        updateProgress();
+
+        // Add smooth scrolling and animation effects
+        document.addEventListener('DOMContentLoaded', function() {
+            const cards = document.querySelectorAll('.card');
+            cards.forEach((card, index) => {
+                card.style.animationDelay = (index * 0.2) + 's';
+            });
+        });
+
+        // Update step when user connects to Spotify
+        document.querySelector('a[href*="spotify_login"]').addEventListener('click', function() {
+            setTimeout(() => {
+                currentStep = 2;
+                updateProgress();
+            }, 1000);
+        });
     </script>
-</head>
-<body>
-    <a href="{{ url_for('spotify_login') }}" target="_blank">Log in with Spotify (new tab)</a>
-    
-    <form action="{{ url_for('submit_redirect_url') }}" method="POST">
-        <label for="redirect_url">Paste the redirect URL here:</label><br>
-        <input type="text" id="redirect_url" name="redirect_url" style="width: 500px;" required><br><br>
-        <button type="submit">Submit</button>
-    </form>
-
-    <br>
-    <br>
-    
-
-
-    <h1>Select Platforms</h1>
-
-    <form method="POST" action="/transfer">
-        <!-- First dropdown: source platform -->
-        <div class="section">
-            <label for="platform">From Platform:</label>
-            <select id="platform" name="platform" required>
-                <option value="">-- Select --</option>
-                <option value="Spotify">Spotify</option>
-                <option value="YouTube">YouTube</option>
-            </select>
-            <button type="button" onclick="showInputSection()">Next</button>
-        </div>
-
-        <!-- Playlist ID input -->
-        <div id="input-section" class="hidden section">
-            <h3>Enter <span id="platform-name"></span> Playlist ID</h3>
-            <input type="text" name="playlist_id" placeholder="Playlist ID" required>
-            <br><br>
-            <button type="button" onclick="showNextSection()">Next</button>
-        </div>
-
-        <!-- Second dropdown: destination platform -->
-        <div id="next-section" class="hidden section">
-            <label for="platform1">To Platform:</label>
-            <select id="platform1" name="platform1" required>
-                <option value="">-- Select --</option>
-                <option value="Spotify">Spotify</option>
-                <option value="YouTube">YouTube</option>
-            </select>
-            <br><br>
-            <input type="submit" value="Submit">
-        </div>
-    </form>
-
-    <br>
-    
-    <form method="POST" action="/liked">
-        <select id="liked_select" name="liked_select">
-            <option value="Spotify">Spotify Songs</option>
-            <option value="Youtube">Youtube Songs</option>
-        </select>
-        
-        <button type="submit">Get Liked Songs</button>
-    </form>
-
-    <!-- <form action="{{ url_for('spotify_login') }}" method="get">
-        <button type="submit">Connect to Spotify</button>
-    </form> -->
-
-    
 </body>
 </html>

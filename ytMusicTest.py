@@ -8,18 +8,19 @@ class Youtube:
 
     def get_playlists(self, id):
         playlist = self.ytmusic.get_playlist(id, limit=1000)
-        # print(json.dumps(playlist, indent=2))
         name, desc = playlist['title'], playlist['description']
-        # print(name, desc)
-        all_tracks = []
-
+        
+        # Yield playlist info first
+        yield {'type': 'playlist_info', 'name': name, 'description': desc}
+        
+        # Then yield tracks
         for track in playlist["tracks"]:
-            if not track['album']:
-                all_tracks.append(Track(track['title'], track['artists'][0]['name'], ""))
+            # print(track)
+            if not track['thumbnails']:
+                append_track = Track(track['title'], track['artists'][0]['name'], "")
             else:
-                all_tracks.append(Track(track['title'], track['artists'][0]['name'], track['album']['name']))
-
-        return name, desc, all_tracks
+                append_track = Track(track['title'], track['artists'][0]['name'], track['thumbnails'][0]['url'])
+            yield append_track
     
     def search(self, search_songs):
         filter = 'songs'
@@ -38,6 +39,17 @@ class Youtube:
                 
             time.sleep(0.1)
         return ids
+    
+    def search_song(self, search_song):
+        filter = 'songs'
+        song = search_song.toString()
+        try:
+            search_results = self.ytmusic.search(song, filter)
+        except:
+            return []
+        
+        if len(search_results) > 0:  
+            return search_results[0]['videoId']
 
     def create_playlist(self, name, description, ids):
         return self.ytmusic.create_playlist(name, description, "PUBLIC", video_ids=ids)
@@ -51,10 +63,10 @@ class Youtube:
         return result_tracks
 
 class Track:
-    def __init__(self, title, artist, album):
+    def __init__(self, title, artist, url):
         self.title = title
         self.artist = artist
-        self.album = album
+        self.url = url
     
     def toString(self):
         return f"{self.title} {self.artist}"

@@ -1,8 +1,10 @@
+import json
 import requests
 import base64
 import webbrowser
 from urllib.parse import urlencode, urlparse, parse_qs
 from ytMusicTest import Track
+import time
 
 class Spotify:
     def __init__(self):
@@ -110,18 +112,19 @@ class Spotify:
             "Authorization": f"Bearer {self.token}"
         }
 
-        all_tracks = []
         while url:
             res = requests.get(url, headers=headers)
             data = res.json()
 
             for item in data["items"]:
                 track = item["track"]
-                all_tracks.append(Track(track['name'], track['artists'][0]['name'], track['album']['name']))
+                # for key, val in track.items():
+                #     print(key, val)
+                yield Track(track['name'], track['artists'][0]['name'], track['album']['images'][0]['url'])
 
             url = data["next"]
 
-        return all_tracks
+        return None
     
     def get_name_and_desc(self, playlist_id):
         url = f"https://api.spotify.com/v1/playlists/{playlist_id}"
@@ -188,6 +191,23 @@ class Spotify:
                     print("Tracks added successfully.")
                 else:
                     print("Failed to add tracks:", response.status_code, response.text)
+        else:
+            url = f"https://api.spotify.com/v1/playlists/{playlist_id}/tracks"
+            headers = {
+                "Authorization": f"Bearer {self.token}",
+                "Content-Type": "application/json"
+            }
+
+            data = {
+                "uris": song_ids
+            }
+
+            response = requests.post(url, headers=headers, json=data)
+            
+            if response.status_code == 201:
+                print("Tracks added successfully.")
+            else:
+                print("Failed to add tracks:", response.status_code, response.text)
 
     def search(self, track):
         url = "https://api.spotify.com/v1/search"
@@ -220,3 +240,116 @@ class Spotify:
             print(track)
         
         return uris
+    
+
+
+frontend_js = '''
+// AJAX approach - load tracks in batches
+class PlaylistLoader {
+    constructor(playlistId, token) {
+        this.playlistId = playlistId;
+        this.token = token;
+        this.currentPage = 1;
+        this.isLoading = false;
+    }
+    
+    async loadNextPage() {
+        if (this.isLoading) return;
+        
+        this.isLoading = true;
+        
+        try {
+            const response = await fetch(`/api/playlist/${this.playlistId}/tracks?page=${this.currentPage}`, {
+                headers: {
+                    'Authorization': `Bearer ${this.token}`
+                }
+            });
+            
+            const data = await response.json();
+            
+            if (data.error) {
+                showError(data.error);
+                return;
+            }
+            
+            // Add tracks to display
+            data.tracks.forEach((track, index) => {
+                const globalIndex = ((this.currentPage - 1) * 20) + index;
+                addTrack(track, globalIndex);
+            });
+            
+            updatePageCount();
+            
+            if (data.has_next) {
+                this.currentPage++;
+                // Load next page after a delay
+                setTimeout(() => this.loadNextPage(), 500);
+            } else {
+                completeLoading();
+            }
+            
+        } catch (error) {
+            showError('Failed to load tracks');
+        } finally {
+            this.isLoading = false;
+        }
+    }
+    
+    start() {
+        startTimer();
+        this.loadNextPage();
+    }
+}
+
+// Server-Sent Events approach - real-time streaming
+class PlaylistStreamer {
+    constructor(playlistId, token) {
+        this.playlistId = playlistId;
+        this.token = token;
+    }
+    
+    start() {
+        startTimer();
+        
+        const eventSource = new EventSource(`/api/playlist/${this.playlistId}/tracks/stream`, {
+            headers: {
+                'Authorization': `Bearer ${this.token}`
+            }
+        });
+        
+        eventSource.onmessage = (event) => {
+            const data = JSON.parse(event.data);
+            
+            switch(data.type) {
+                case 'track':
+                    addTrack(data, data.index);
+                    break;
+                case 'page_complete':
+                    updatePageCount();
+                    break;
+                case 'complete':
+                    completeLoading();
+                    eventSource.close();
+                    break;
+                case 'error':
+                    showError(data.message);
+                    eventSource.close();
+                    break;
+            }
+        };
+        
+        eventSource.onerror = () => {
+            showError('Connection lost while loading tracks');
+            eventSource.close();
+        };
+    }
+}
+
+// Usage example:
+// const loader = new PlaylistLoader('your-playlist-id', 'your-token');
+// loader.start();
+
+// Or for real-time streaming:
+// const streamer = new PlaylistStreamer('your-playlist-id', 'your-token');
+// streamer.start();
+'''

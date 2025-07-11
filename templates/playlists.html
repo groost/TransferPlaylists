@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Playlist Transfer</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        
+        .container {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        .status {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 5px;
+            background-color: #e3f2fd;
+            border-left: 4px solid #2196f3;
+        }
+        
+        .track {
+            display: flex;
+            align-items: center;
+            margin: 10px 0;
+            padding: 15px;
+            background-color: #fafafa;
+            border-radius: 8px;
+            border-left: 4px solid #4caf50;
+            transition: all 0.3s ease;
+        }
+        
+        .track:hover {
+            background-color: #f0f0f0;
+            transform: translateX(5px);
+        }
+        
+        .track img {
+            width: 60px;
+            height: 60px;
+            border-radius: 5px;
+            margin-right: 15px;
+            object-fit: cover;
+        }
+        
+        .track-info {
+            flex: 1;
+        }
+        
+        .track-name {
+            font-weight: bold;
+            font-size: 16px;
+            margin-bottom: 5px;
+        }
+        
+        .track-artist {
+            color: #666;
+            font-size: 14px;
+        }
+        
+        .track-number {
+            background-color: #2196f3;
+            color: white;
+            padding: 5px 10px;
+            border-radius: 50%;
+            font-size: 12px;
+            font-weight: bold;
+            margin-left: 10px;
+        }
+        
+        .form-container {
+            margin-bottom: 30px;
+            padding: 20px;
+            background-color: #f9f9f9;
+            border-radius: 8px;
+        }
+        
+        .form-group {
+            margin-bottom: 15px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        
+        input, select {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+        
+        button {
+            background-color: #4caf50;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        
+        button:hover {
+            background-color: #45a049;
+        }
+        
+        button:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+        
+        .completed {
+            background-color: #d4edda;
+            color: #155724;
+            border-left-color: #28a745;
+        }
+        
+        .error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border-left-color: #dc3545;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Playlist Transfer</h1>
+        
+        <div class="form-container">
+            <form id="transferForm">
+                <div class="form-group">
+                    <label for="platform">From Platform:</label>
+                    <select id="platform" name="platform" required>
+                        <option value="">Select Platform</option>
+                        <option value="Spotify">Spotify</option>
+                        <option value="YouTube">YouTube</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="playlist_id">Playlist ID:</label>
+                    <input type="text" id="playlist_id" name="playlist_id" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="platform1">To Platform:</label>
+                    <select id="platform1" name="platform1" required>
+                        <option value="">Select Platform</option>
+                        <option value="Spotify">Spotify</option>
+                        <option value="YouTube">YouTube</option>
+                    </select>
+                </div>
+                
+                <button type="submit" id="submitBtn">Start Transfer</button>
+            </form>
+        </div>
+        
+        <div id="status" class="status" style="display: none;"></div>
+        <div id="tracks"></div>
+    </div>
+
+    <script>
+        const form = document.getElementById('transferForm');
+        const statusDiv = document.getElementById('status');
+        const tracksDiv = document.getElementById('tracks');
+        const submitBtn = document.getElementById('submitBtn');
+        
+        let trackCount = 0;
+        let eventSource = null;
+        
+        form.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            // Clear previous results
+            tracksDiv.innerHTML = '';
+            trackCount = 0;
+            
+            // Disable form
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Transferring...';
+            
+            // Show status
+            statusDiv.style.display = 'block';
+            statusDiv.innerHTML = 'Starting transfer...';
+            statusDiv.className = 'status';
+            
+            // Create FormData
+            const formData = new FormData(form);
+            
+            // Create EventSource with POST data
+            // Note: EventSource doesn't support POST directly, so we'll use fetch
+            fetch('/transfer', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => {
+                const reader = response.body.getReader();
+                const decoder = new TextDecoder();
+                
+                function readStream() {
+                    return reader.read().then(({ done, value }) => {
+                        if (done) {
+                            console.log('Stream finished');
+                            return;
+                        }
+                        
+                        const chunk = decoder.decode(value, { stream: true });
+                        const lines = chunk.split('\n');
+                        
+                        lines.forEach(line => {
+                            if (line.startsWith('data: ')) {
+                                const data = JSON.parse(line.substring(6));
+                                handleData(data);
+                            }
+                        });
+                        
+                        return readStream();
+                    });
+                }
+                
+                return readStream();
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                statusDiv.innerHTML = 'Connection error';
+                statusDiv.className = 'status error';
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Start Transfer';
+            });
+        });
+        
+        function handleData(data) {
+            if (data.completed) {
+                statusDiv.innerHTML = `Transfer completed! Processed ${trackCount} tracks.`;
+                statusDiv.className = 'status completed';
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Start Transfer';
+                return;
+            }
+            
+            if (data.error) {
+                statusDiv.innerHTML = `Error: ${data.error}`;
+                statusDiv.className = 'status error';
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Start Transfer';
+                return;
+            }
+            
+            // Handle track data
+            if (data.name && data.artist) {
+                trackCount++;
+                statusDiv.innerHTML = `Loading tracks... (${trackCount} found)`;
+                
+                const trackDiv = document.createElement('div');
+                trackDiv.className = 'track';
+                trackDiv.innerHTML = `
+                    ${data.image ? `<img src="${data.image}" alt="Album art" onerror="this.style.display='none'">` : ''}
+                    <div class="track-info">
+                        <div class="track-name">${data.name}</div>
+                        <div class="track-artist">${data.artist}</div>
+                    </div>
+                    <div class="track-number">${trackCount}</div>
+                `;
+                
+                tracksDiv.appendChild(trackDiv);
+                
+                // Smooth scroll to the latest track
+                trackDiv.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            }
+        }
+    </script>
+</body>
+</html>

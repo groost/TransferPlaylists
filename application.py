@@ -1,8 +1,9 @@
 from urllib.parse import urlparse, parse_qs
-from flask import Flask, render_template, request, redirect, url_for
+from flask import Flask, Response, jsonify, render_template, request, redirect, url_for
 from BetterSpotifyTest import Spotify
 from ytMusicTest import Youtube, Track
 import time
+import json
 
 application = Flask(__name__)
 youtube = Youtube()
@@ -12,15 +13,96 @@ spotify = Spotify()
 def index():
     return render_template("index.html")
 
+@application.route("/transfer-html", methods=["GET"])
+def transfer_html():
+    return render_template("playlists.html")
+
 @application.route("/transfer", methods=["POST"])
 def transfer():
     from_platform = request.form.get("platform")
     playlist_id = request.form.get("playlist_id")
     to_platform = request.form.get("platform1")
+    
+    def generate():
+        try:
+            tracks = []
+            name = ""
+            desc = ""
 
-    transfer_playlists(from_platform, playlist_id, to_platform)
+            if from_platform == "Spotify":
+                track_generator = spotify.get_playlist_tracks(playlist_id)
+                
+                for track in track_generator:
+                    # track_data = {
+                    #     'name': track.title,
+                    #     'artist': track.artist,
+                    #     'image': track.url
+                    # }
+                    # yield f"data: {json.dumps(track_data)}\n\n"
+                    tracks.append(track)
+                
+                name, desc = spotify.get_name_and_desc(playlist_id)
+                
+            elif from_platform == "YouTube":
+                track_generator = youtube.get_playlists(playlist_id)
+                playlist_info = next(track_generator)
+                name = playlist_info['name']
+                desc = playlist_info['description']
+                for track in track_generator:
+                    # track_data = {
+                    #     'name': getattr(track, 'title', str(track)),
+                    #     'artist': getattr(track, 'artist', 'Unknown'),
+                    #     'image': getattr(track, 'url', '')
+                    # }
+                    tracks.append(track)
+                    # yield f"data: {json.dumps(track_data)}\n\n"
 
-    return f"Converted from {from_platform} to {to_platform} using playlist ID: {playlist_id}"
+            # Transfer phase (no yielding here)
+            if to_platform == "Spotify":
+                spotify_uris = []
+                
+                for track in tracks:
+                    result = spotify.search(track)
+                    time.sleep(0.1)
+                    if len(result) > 0:
+                        spotify_uris.append(result[0])
+
+                    track_data = {
+                        'name': track.title,
+                        'artist': track.artist,
+                        'image': track.url
+                    }
+
+                    yield f"data: {json.dumps(track_data)}\n\n"  
+                
+                new_playlist_id = spotify.create_playlist(name, desc, True)
+                print(new_playlist_id)
+                spotify.add_songs_to_playlist(spotify_uris, new_playlist_id)
+            
+            elif to_platform == 'YouTube':
+                ids = []
+                for track in tracks:
+                    id = youtube.search_song(track)
+                    time.sleep(0.1)
+                    ids.append(id)
+                    
+                    track_data = {
+                        'name': track.title,
+                        'artist': track.artist,
+                        'image': track.url
+                    }
+
+                    yield f"data: {json.dumps(track_data)}\n\n"
+                    
+                youtube.create_playlist(name, desc, ids)
+            
+            # Send completion signal
+            yield f"data: {json.dumps({'completed': True})}\n\n"
+            
+        except Exception as e:
+            yield f"data: {json.dumps({'error': str(e)})}\n\n"
+    
+    return Response(generate(), mimetype='text/event-stream')
 
 @application.route("/liked", methods=["POST"])
 def get_liked_songs():
@@ -64,41 +146,29 @@ def spotify_callback():
     token = spotify.exchange_code_for_token(code)
     return "Authorization successful! Token obtained."
 
-
-def transfer_playlists(from_platform, playlist_id, to_platform):
+@application.route("/get_playlist")
+def get_playlist_items():
+    playlist_id = request.form.get("playlist_id")
     tracks = []
-    name = ""
-    desc = ""
+    check = spotify.get_playlist_tracks(playlist_id)
+    while not check is None:
+        tracks.append(check)
 
-    print("From:", from_platform)
-    print("To:", to_platform)
-    print("Playlist ID:", playlist_id)
+@application.route('/api/playlist/<playlist_id>/tracks/stream')
+def stream_playlist_tracks(playlist_id):
+    """
+    Server-Sent Events endpoint for real-time streaming
+    """
 
-    if from_platform == "Spotify":
-        tracks = spotify.get_playlist_tracks(playlist_id)
-        name, desc = spotify.get_name_and_desc(playlist_id)
-    elif from_platform == "YouTube":
-        name, desc, tracks = youtube.get_playlists(playlist_id)
+    try:
+        return application.response_class(
+            spotify.get_playlist_tracks_streaming(playlist_id),
+            mimetype='text/event-stream'
+        )
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
 
-    # print("Playlist name:", name)
-    # print("Description:", desc)
-    # print("Tracks:", tracks)
-
-    if to_platform == "Spotify":
-        spotify_uris = []
-
-        for track in tracks:
-            result = spotify.search(track)
-            time.sleep(0.1)
-            if len(result) > 0:
-                spotify_uris.append(result[0])
-        
-        new_playlist_id = spotify.create_playlist(name, desc, True)
-        spotify.add_songs_to_playlist(spotify_uris, new_playlist_id)
     
-    elif to_platform == 'YouTube':
-        ids = youtube.search(tracks)
-        print(youtube.create_playlist(name, desc, ids))
 
 if __name__ == "__main__":
     application.run(debug=True)
